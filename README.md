@@ -64,6 +64,74 @@ https://github.com/user-attachments/assets/600c94ec-428e-4a6c-ac92-5be08760dd29
 
 https://github.com/user-attachments/assets/19951607-b86e-4e11-a895-c03bf2502648
 
+<h4>Use Remote Desktop to connect to your Windows 10 VM</h4>
+
+<p>Since I’m on a Mac, I’m using the Microsoft Remote Desktop app. But if you’re on Windows, just open up Remote Desktop and log in from there.</p>
+
+<p>Just grab the public IP of your Windows VM and paste it into the Remote Desktop app (or Remote Desktop on Windows) to log in</p>
+
+<img width="1710" alt="Screenshot 2025-07-09 at 10 46 53 AM" src="https://github.com/user-attachments/assets/35c4f726-3ecd-4e1d-8b48-838c46c7fffa" />
+
+
+https://github.com/user-attachments/assets/4c293c67-d711-4c25-b744-ff881a64ef2a
+
+<h4>Once you're in the Windows 10 VM, download and install Wireshark; we’ll use it to monitor network traffic later.</h4>
+
+<p>We’ll be using the Windows x64 installer, so make sure to grab that version when you download Wireshark.</p>
+
+https://github.com/user-attachments/assets/509dbfe9-ff3b-47e3-ab80-2c3a2fd6f2be
+
+<h4>Open up Wireshark on the Windows 10 VM and start a packet capture.</h4>
+
+<p>Once you’ve opened up Wireshark, look for the Ethernet interface; it should have lines moving, which means it’s actively detecting traffic. Just highlight that interface and then click the blue shark fin icon in the top left corner to start capturing packets.</p>
+
+
+https://github.com/user-attachments/assets/4c6f51b9-3e4c-4e8b-a703-6c39d876f054
+
+<p>As you can see, all the spam flying by is just the network traffic happening in the background of this computer. It’s constantly communicating, even if you're not doing anything. Wireshark lets us watch all of that in real time.</p>
+
+
+https://github.com/user-attachments/assets/2ae1b92f-b0ba-483f-8923-bd82712773c9
+
+
+<h4>Observe ICMP Traffic</h4>
+
+<p>Now we’re gonna take a closer look at ICMP. This is what gets used when you run a ping. It’s a simple way to test connectivity between devices. We'll trigger a ping in a second and watch how it shows up here in Wireshark.</p>
+
+<p>We’re gonna ping the Linux server we created earlier, so go ahead and grab its private IP address from the Azure portal. We’ll use that to test connectivity and watch the ICMP packets show up in Wireshark.</p>
+
+<img width="1710" alt="Screenshot 2025-07-09 at 11 45 10 AM" src="https://github.com/user-attachments/assets/a29cb6ce-8871-4d3e-ba1e-c9bb95963490" />
+
+<p>So now from the Windows VM, go ahead and open up PowerShell and run a ping to the Linux VM’s public IP address. This will generate ICMP traffic, and you’ll see it show up live in Wireshark while the packets are flying back and forth.</p>
+
+<p>In Wireshark, type icmp into the top filter bar and hit Enter. This will filter out everything except ICMP traffic, so you can focus just on the ping packets we’re sending from the Windows VM to the Linux VM </p>
+
+
+https://github.com/user-attachments/assets/21713ea5-96d5-4db8-a2bd-5b17974f3518
+
+<p>As you can see in PowerShell, there are four ping responses, but in Wireshark, there are eight entries. That’s because Wireshark captures both the request and the reply, so you’re seeing both sides of the conversation.</p>
+
+<img width="1710" alt="Screenshot 2025-07-09 at 12 00 56 PM" src="https://github.com/user-attachments/assets/2dd7b3ba-cfe2-4f50-85a0-13991c61c5cb" />
+
+<p>And if we inspect a bit deeper in the packet details, you’ll notice the MAC addresses of each VM. This is part of how devices communicate at Layer 2 of the OSI model (Data Link Layer).</p>
+
+<img width="1710" alt="Screenshot 2025-07-09 at 12 07 23 PM" src="https://github.com/user-attachments/assets/067d440f-0300-4f8a-bb62-0c1ccae09aa6" />
+
+<p>Now, if we go to the Internet Protocol section in the packet details, this is Layer 3 of the OSI model (Network Layer). Here, you’ll be able to see the IP addresses of both the Windows and Linux VMs</p>
+
+
+<img width="1710" alt="Screenshot 2025-07-09 at 12 07 41 PM" src="https://github.com/user-attachments/assets/8a0d96f2-98d9-48ec-84f3-a41470a1f0df" />
+
+<p>And if we expand the Data section, this is the actual payload of the packet. It’s not really important when it comes to just pinging a device, but you can see here that it’s literally just the alphabet being sent back and forth; it’s just filler data for the test.</p>
+
+<img width="1710" alt="Screenshot 2025-07-09 at 12 22 12 PM" src="https://github.com/user-attachments/assets/39f11b42-f597-4696-b393-ca35988a0e81" />
+
+
+
+
+
+
+
 
 
 
