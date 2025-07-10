@@ -126,6 +126,63 @@ https://github.com/user-attachments/assets/21713ea5-96d5-4db8-a2bd-5b17974f3518
 
 <img width="1710" alt="Screenshot 2025-07-09 at 12 22 12 PM" src="https://github.com/user-attachments/assets/39f11b42-f597-4696-b393-ca35988a0e81" />
 
+<h3>Configuring a Firewall (Network Security Group)</h3>
+
+<p>Now we’re gonna set up a Network Security Group (NSG), basically Azure’s version of a firewall. This lets us control what kind of traffic is allowed in or out of our VMs, so we can start locking things down and testing how it affects communication between devices.</p>
+
+<p>First, we’re gonna initiate a nonstop/perpetual ping from the Windows 10 VM to the Ubuntu VM.
+Open up PowerShell and type: ping (IP Address) -t
+  
+The -t flag makes the ping keep running until you manually stop it. </p>
+
+
+https://github.com/user-attachments/assets/d3da5783-1d23-4311-8db9-ecfcabec4d4e
+
+
+<p>What we’re basically doing here is telling the Linux VM to block all ICMP traffic coming from the Windows VM. Once we apply that rule in the NSG, any ping attempts should stop getting replies and you'll see the timeouts start showing up right away.</p>
+
+<p>So go to your Linux VM in Azure → Networking → under Network Settings, click on Network Security Group → then go to Settings → Inbound Security Rules.
+This is where we’ll block ICMP so we can see the firewall in action.</p>
+
+
+<p>For the ports, we’re just gonna put *(any), ICMP doesn’t really use ports, but Azure still asks for something there.
+  
+Set the priority to 290 so it’s high on the list and gets processed before any allow rules. This way, our deny rule will actually take effect.</p>
+
+
+https://github.com/user-attachments/assets/3672a1c8-4c7e-4dfa-a656-bc17928ff0bf
+
+<p>As you can see, once the deny rule took effect, the ping in PowerShell started timing out.
+And if you check Wireshark, you’ll notice the traffic changed, before it was request → reply, but after the rule kicked in, it’s just a bunch of requests going out from the Windows VM with no replies coming back from the Linux VM.</p>
+
+
+https://github.com/user-attachments/assets/02ed02d9-1902-47fb-9107-a9056e230adb
+
+<p>Now go ahead and re-enable ICMP traffic in the Network Security Group for your Ubuntu VM, you can either delete the deny rule or change its action to allow.
+
+Once that’s done, jump back to the Windows 10 VM and you should see the ping start working again in PowerShell, and in Wireshark, you’ll see both requests and replies showing up just like before.</p>
+
+
+https://github.com/user-attachments/assets/47b87953-1ff5-4624-8fc9-9aaa07e72dbe
+
+
+<p>As you can see, once we deleted the deny rule, the requests are now getting replies again, both in PowerShell and in Wireshark. That means ICMP traffic is allowed once more and communication between the VMs is back to normal.</p>
+
+https://github.com/user-attachments/assets/4bcdb835-f79e-4050-90a0-515f0269a062
+
+
+
+<h3>Observe SSH Traffic</h3>
+
+<p>So now we’re gonna observe SSH traffic between the Windows VM and the Linux VM. This will let us see what a remote login connection looks like in Wireshark and how it's different from something like a ping.</p>
+
+<p>Back in Wireshark, go ahead and start a new packet capture.
+At the top filter bar, type in: tcp.port == 22  or just type in ssh.</p>
+
+
+https://github.com/user-attachments/assets/ef78e2b8-6229-4adb-ab9f-57c30428c67c
+
+
 
 
 
