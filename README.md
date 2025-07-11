@@ -182,6 +182,48 @@ At the top filter bar, type in: tcp.port == 22  or just type in ssh.</p>
 
 https://github.com/user-attachments/assets/ef78e2b8-6229-4adb-ab9f-57c30428c67c
 
+<p>Now go ahead and SSH into the Linux server that we just made. Just open up PowerShell on the Windows VM and run:
+
+ssh labuser(private IP address)</p>
+
+<p>Note: When you’re typing the password, it might look like nothing is being entered; that’s normal. It’s actually typing in the background; it just doesn’t show anything for security reasons. Just type it out and hit Enter.</p>
+
+
+https://github.com/user-attachments/assets/baf23887-e692-4a5c-b9cc-4a7ab193655d
+
+<p>Now, if you go back to Wireshark, you’ll see that everything happening in the SSH session is being recorded, even a single keystroke shows up as traffic. That’s because SSH encrypts and sends data with every action, so you can literally observe each interaction in real time.</p>
+
+
+https://github.com/user-attachments/assets/61d40a2c-4362-4183-8b73-48ed6ca8e8b4
+
+<p>The good thing about SSH is that everything is encrypted, so even though you can see the traffic in Wireshark, you can’t read the actual data; it's all secured. This is way more secure than something like Telnet (port 23), where everything is sent in clear text, including usernames and passwords.</p>
+
+<img width="1710" height="1107" alt="Screenshot 2025-07-11 at 4 18 59 PM" src="https://github.com/user-attachments/assets/48b45b71-b960-473a-b254-d78198d4f6a5" />
+
+<p>When your Windows VM connects to the Linux VM over SSH, it uses a random high-numbered port called an "ephemeral port" as the source port, like 50528. 
+
+This is completely normal and is how the client system keeps track of outgoing connections. While the Linux VM listens on the standard SSH port 22, the client picks an available temporary port (usually between 49152 and 65535) to initiate the connection. 
+
+This allows the system to manage multiple connections at once without confusion. Even though all connections are going to port 22 on the server, each one comes from a different source port on the client, acting like a unique return address so the server knows where to send the reply.</p>
+
+<img width="1710" height="1107" alt="Screenshot 2025-07-11 at 4 48 58 PM" src="https://github.com/user-attachments/assets/35df7d38-68d8-4898-b5a6-4f9cd6472f49" />
+
+
+<p>So now just go ahead and type exit in the PowerShell window, that’ll close the SSH session and log you out of the Linux VM.</p>
+
+<img width="1710" height="1107" alt="Screenshot 2025-07-11 at 4 54 49 PM" src="https://github.com/user-attachments/assets/7f9704fc-de7f-400f-a37a-226895ec673c" />
+
+<h3>Observe DHCP traffic</h3>
+
+<p>So now we’re gonna observe DHCP traffic. Head back into Wireshark and in the top filter bar, 
+  
+type: dhcp or udp.port == 67
+</p>
+
+<p>So, DHCP (port 67 UDP) is a network protocol that automatically assigns IP addresses, subnet masks, default gateways, and DNS info to devices on a network.</p>
+
+
+
 
 
 
