@@ -10,20 +10,23 @@ In this tutorial, we observe various network traffic to and from Azure Virtual M
 - Microsoft Azure (Virtual Machines/Compute)
 - Remote Desktop
 - Various Command-Line Tools
-- Various Network Protocols (SSH, RDH, DNS, HTTP/S, ICMP)
+- Various Network Protocols (SSH, RDH, DNS, HTTPS, ICMP)
 - Wireshark (Protocol Analyzer)
 
 <h2>Operating Systems Used </h2>
 
-- Windows 10 (21H2)
-- Ubuntu Server 20.04
+- Windows 10 (22H2)
+- Ubuntu Server 22.04
 
 <h2>High-Level Steps</h2>
 
-- Step 1
-- Step 2
-- Step 3
-- Step 4
+- Create our Virtual Machines
+- Observe ICMP Traffic
+- Configuring a Firewall [Network Security Group
+- Observe SSH Traffic
+- Observe DHCP Traffic
+- Observe DNS Traffic
+- Observe RDP Traffic
 
 <h2>Actions and Observations</h2>
 
@@ -222,6 +225,92 @@ type: dhcp or udp.port == 67
 
 <p>So, DHCP (port 67 UDP) is a network protocol that automatically assigns IP addresses, subnet masks, default gateways, and DNS info to devices on a network.</p>
 
+<p>Now, from your Windows 10 VM, attempt to issue your VM a new IP address from the command line</p>
+
+<h4>So first, go ahead and open up Notepad, and type in the two commands:</h4>
+
+<p>ipconfig/release</p>
+<p>ipconfig/renew</p>
+
+<p>Then go ahead and save the file as: dhcp.bat
+And then change the “Save as type” to “All Files”
+Then save it to C:\ProgramData
+</p>
+
+<p>This batch file to release the IP address and then renew it right away in one go. This lets us trigger the DHCP process without crashing or disconnecting the VM, which is perfect for observing the traffic safely in Wireshark.</p>
+
+https://github.com/user-attachments/assets/b4ed8a40-8d4b-4887-a793-a3d78de95556
+
+<p>Now, if everything was saved correctly, we can verify it in PowerShell.</p>
+
+<img width="1018" height="705" alt="Screenshot 2025-07-11 at 10 48 59 PM" src="https://github.com/user-attachments/assets/74df1939-5216-43f8-8ddf-c565cb214507" />
+
+<p>So now we're gonna run the batch file by typing this into PowerShell: .\dhcp.bat</p>
+
+<p>Once you run it, you'll see the IP address get released and then renewed. And if you're watching Wireshark, you'll spot the DHCP Discover, Offer, Request, and Acknowledgment right away after it restarts.</p>
+
+https://github.com/user-attachments/assets/56209f39-467a-437f-b82a-581debc14861
+
+
+<p>Now if we observe Wireshark, you’ll see the whole DHCP process play out:
+
+-After the IP was released, our Windows VM temporarily takes on the IP 0.0.0.0 and sends a broadcast to 255.255.255.255. This is the DHCP Discover phase, basically the VM is shouting, “Hey, is there a DHCP server out there?”
+
+-Then, the DHCP server replies with another broadcast, this is the Offer phase, where it says, “Here’s an IP I can give you.”
+
+-Next, the VM responds with a Request, saying “Yes, I want that IP.”
+
+-Finally, the DHCP server sends an Acknowledgment, confirming the lease.
+
+This whole back-and-forth happens in seconds, and Wireshark captures every step of it.</p>
+
+
+<img width="1360" height="977" alt="Screenshot 2025-07-11 at 11 04 30 PM" src="https://github.com/user-attachments/assets/51edfe23-ee0c-43ca-93cf-d376addf7e08" />
+
+<h3>Observe DNS Traffic</h3>
+
+<p>Back in Wireshark, go ahead and filter for DNS traffic by typing the following into the top filter bar: dns or udp.port ==53 || tcp.port ==53</p>
+
+<img width="1360" height="977" alt="Screenshot 2025-07-11 at 11 25 28 PM" src="https://github.com/user-attachments/assets/f4f24137-49a8-4d6d-b5b1-d8d1e35b40e8" />
+
+<p>Now go ahead and restart the capture in Wireshark to get a clean view.
+
+Then, open PowerShell and type: nslookup (website)</p>
+
+<img width="1020" height="594" alt="Screenshot 2025-07-11 at 11 30 31 PM" src="https://github.com/user-attachments/assets/3bf83612-37c6-4a8e-b6c0-83801ace1e81" />
+
+<p>And if you take a look at Wireshark, you’ll notice there’s a lot of stuff happening in the background</p>
+
+<img width="1359" height="974" alt="Screenshot 2025-07-11 at 11 34 21 PM" src="https://github.com/user-attachments/assets/ffc2c6b5-0d2d-4e5f-bd88-f14c4ad9bf0b" />
+
+<p>We could try copying one of the IP addresses we got from nslookup and pasting it into the web browser, but most likely it won’t work, that’s because we’re trying to access the website by its IP address instead of its domain name.
+
+Many modern websites rely on virtual hosting, where multiple domains share the same IP. Without the proper domain in the request, the server doesn’t know which site you're asking for, so it just denies or redirects the request.</p>
+
+
+https://github.com/user-attachments/assets/a041c151-d438-4f49-a72a-04486826c959
+
+<h3>Observe RDP Traffic</h3>
+
+<p>Basically, the Windows 10 VM we’re using is being accessed through Remote Desktop Protocol (RDP), which runs on TCP port 3389. So every time we connect to it using Remote Desktop or the Windows app on Mac, all that traffic is going over RDP and if you filter by tcp.port == 3389 in Wireshark, you’ll see all that connection activity show up.</p>
+
+<img width="1710" height="1107" alt="Screenshot 2025-07-11 at 11 51 51 PM" src="https://github.com/user-attachments/assets/5d808802-f54e-45c6-8dfa-09045574cdf3" />
+
+<p>So when you capture RDP traffic in Wireshark, you’ll notice a ton of what looks like packets constantly flying through. That’s because with RDP, you’re basically streaming your entire desktop session, and every little action, whether it’s moving your mouse, typing a key, or dragging a window gets sent over the network. That’s why it’s so chatty in the capture.</p>
+
+<p>And if you compare it to SSH, it’s a lot quieter. SSH only sends data when you actually do something, like typing a command or hitting Enter, since it's just a command-line interface. But with RDP, it’s constantly streaming your entire screen session, so even just moving your mouse or hovering over something generates traffic. That’s why RDP looks way more active in Wireshark than SSH.
+</p>
+
+
+https://github.com/user-attachments/assets/7c9d47c6-e507-4666-80a1-c666fb1b87a2
+
+<h3>Conclusion</h3>
+
+<p>That wraps up this lab! We’ve gone through capturing and analyzing different types of network traffic using Wireshark and observing DNS, ICMP, SSH, to RDP. Hopefully, this gave you a better idea of what’s going on behind the scenes when devices communicate over a network. Seeing all that traffic in real time really helps build that next-level understanding.
+
+Before you go, make sure to delete the resource group if you’re completely done with the lab. That way, you avoid getting charged for unused resources sitting around in Azure.
+
+Thanks again for following along. I hope this project was helpful!</p>
 
 
 
